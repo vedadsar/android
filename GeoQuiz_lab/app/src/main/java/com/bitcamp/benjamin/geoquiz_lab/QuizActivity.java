@@ -15,18 +15,23 @@ import android.widget.Toast;
 public class QuizActivity extends ActionBarActivity {
 
     private final String TAG = "QuizActivity";
+
     public static final String INTENT_KEY_CORRECT_ANSWERS = "bitcamp.geoquiz.correct_answers";
     public static final String INTENT_KEY_TOTAL_QUESTIONS = "bitcamp.geqoquiz.total_questions";
     public static final String INTENT_KEY_CURRENT_QUESTION = "bitcamp.geoquiz.current_question";
 
+    private static final String BUNDLE_KEY_CURRENT_INDEX = "bitcamp.geoquiz.current_key";
+    private static final String BUNDLE_KEY_CORRECT_ANSWER = "bitcamp.geoquiz.correct_answers";
+
     private Button mTrueButton;
     private Button mFalseButton;
     private Button mStatsButton;
+    private Button mNameButton;
 
     private TextView mQuestionText;
 
 
-    private int mCurrentIndex = -1;
+    private int mCurrentIndex = 0;
     private int mCorrectAnswers = 0;
     private Question[] mQuestions = new Question[]{
             new Question(R.string.question_1, true),
@@ -40,7 +45,10 @@ public class QuizActivity extends ActionBarActivity {
         setContentView(R.layout.activity_quiz);
 
         Log.d(TAG, "onCreate started");
-
+        if(savedInstanceState != null){
+            mCurrentIndex = savedInstanceState.getInt(BUNDLE_KEY_CURRENT_INDEX);
+            mCorrectAnswers = savedInstanceState.getInt(BUNDLE_KEY_CORRECT_ANSWER);
+        }
 
         mTrueButton = (Button) findViewById(R.id.true_button);
         mTrueButton.setOnClickListener(new View.OnClickListener() {
@@ -70,8 +78,26 @@ public class QuizActivity extends ActionBarActivity {
             }
         });
 
+        mNameButton = (Button) findViewById(R.id.set_name_button);
+        mNameButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent setNameIntent = new Intent(QuizActivity.this, InputActivity.class);
+                startActivity(setNameIntent);
+            }
+        });
+
         mQuestionText = (TextView) findViewById(R.id.question_text);
+
         updateQuestionText();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outputBundle) {
+        super.onSaveInstanceState(outputBundle);
+        outputBundle.putInt(BUNDLE_KEY_CORRECT_ANSWER , mCorrectAnswers);
+        outputBundle.putInt(BUNDLE_KEY_CURRENT_INDEX, mCurrentIndex);
+
     }
 
     private void checkAnswer(boolean userChoice) {
@@ -83,12 +109,13 @@ public class QuizActivity extends ActionBarActivity {
         } else {
             toastText = R.string.incorrect;
         }
+        mCurrentIndex = (mCurrentIndex + 1) % mQuestions.length;
         updateQuestionText();
         Toast.makeText(QuizActivity.this, toastText, Toast.LENGTH_SHORT).show();
     }
 
     private void updateQuestionText() {
-        mCurrentIndex = (mCurrentIndex + 1) % mQuestions.length;
+
         if(mCorrectAnswers > mCurrentIndex)
             mCorrectAnswers = 0;
         mQuestionText.setText(mQuestions[mCurrentIndex].getQuestionId());
